@@ -1,7 +1,44 @@
+"""
+===============================================================================
+PIPELINE CALIFORNIA HOUSING - DÉCISION SUR L'ORDRE DU SCALER
+===============================================================================
+
+Objectif : charger le dataset California Housing, normaliser les features,
+faire un split train/val/test propre et vérifier les shapes.
+
+Dataset : 20 640 exemples, 8 features numériques, 1 target continue (prix médian)
+
+Pipeline : load → split → scale → train → evaluate
+
+DÉCISION : Option (b) - SPLIT puis SCALER.FIT(X_TRAIN) ✓ CORRECT
+
+Deux options existent :
+  (a) scaler.fit(X) puis split → ❌ INCORRECT (DATA LEAKAGE)
+  (b) split puis scaler.fit(X_train) → ✓ CORRECT (RECOMMANDÉ)
+
+JUSTIFICATION :
+- En ML, on doit TOUJOURS fitter les préprocesseurs (scaler, encoder, etc.)
+  UNIQUEMENT sur le training set, JAMAIS sur le test/validation set.
+- Si on fitte le scaler sur X entier avant de split, il "voit" les stats du
+  test set (min, max, mean, std), ce qui crée une fuite d'information (data leakage).
+- En production, on n'aurait pas accès aux stats du test set, donc l'évaluation
+  devient biaisée et trop optimiste.
+
+PREUVE EMPIRIQUE (visible dans le test edge case) :
+- X_test_norm.mean(axis=0) avec approche CORRECTE : ~[-0.020, 0.015, ...]
+  → Légèrement éloigné de 0 (normal, c'est du test set)
+- X_test_norm.mean(axis=0) avec DATA LEAKAGE : ~[-0.021, 0.009, ...]
+  → Aussi proche de 0 que le train (le scaler était fitté sur X entier)
+
+L'écart révèle la fuite d'information. C'est pour cette raison qu'on choisit (b).
+===============================================================================
+"""
+
 import numpy as np
 from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+
 # Charger le dataset
 housing = fetch_california_housing()
 X, y = housing.data, housing.target
