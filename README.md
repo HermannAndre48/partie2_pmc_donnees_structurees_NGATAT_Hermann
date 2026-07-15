@@ -1,0 +1,2 @@
+# partie2_pmc_donnees_structurees_NGATAT_Hermann
+Projet Jour 2 IA_ML
